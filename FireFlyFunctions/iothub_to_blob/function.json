@@ -1,6 +1,21 @@
 {
   "scriptFile": "__init__.py",
   "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "name": "events",
+      "direction": "in",
+      "eventHubName": "iotmurali",
+      "connection": "AzureEventHubConnectionString",
+      "cardinality": "many",
+      "consumerGroup": "$Default",
+      "dataType": "binary"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    }
   ],
-  "disabled": true
+  "disabled": false
 }
