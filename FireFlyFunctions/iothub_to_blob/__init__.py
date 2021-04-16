@@ -17,12 +17,12 @@ def main(events: List[func.EventHubEvent], msg: func.Out[str], context: azure.fu
     else:
         logging.info("RECEIVED {} events for {}".format(len(events), context.invocation_id))
     #
-    connection_string = os.environ["AzureStorageQueuesConnectionString"]
-    queue_name = os.environ["AzureStorageQueueName"]
-    qs = QueueService(connection_string=connection_string, is_emulated=True)
-    logging.info("Conn String: {} \n Queue Name: {}".format(connection_string, queue_name))
     # if not qs.exists(queue_name=queue_name):
     try:
+        connection_string = os.environ["AzureStorageQueuesConnectionString"]
+        queue_name = os.environ["AzureStorageQueueName"]
+        qs = QueueService(connection_string=connection_string, is_emulated=True)
+        logging.info("Conn String: {} \n Queue Name: {}".format(connection_string, queue_name))
         qs.create_queue(queue_name=queue_name, fail_on_exist=True)
     except AzureConflictHttpError:
         logging.info("EXISTS")
