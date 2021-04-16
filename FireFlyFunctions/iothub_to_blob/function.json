@@ -12,9 +12,11 @@
       "dataType": "binary"
     },
     {
-      "type": "http",
+      "type": "queue",
       "direction": "out",
-      "name": "$return"
+      "name": "msg",
+      "queueName": "dev-queue",
+      "connection": "AzureStorageQueuesConnectionString"
     }
   ],
   "disabled": false
