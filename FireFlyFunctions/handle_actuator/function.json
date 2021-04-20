@@ -14,9 +14,10 @@
     {
       "type": "cosmosDB",
       "direction": "out",
-      "name": "doc",
-      "databaseName": "demodb",
+      "name": "msg",
+      "databaseName": "actuators",
       "collectionName": "data",
+      "partitionKey" : "/test",
       "createIfNotExists": "true",
       "connectionStringSetting": "AzureCosmosDBConnectionString"
     }
