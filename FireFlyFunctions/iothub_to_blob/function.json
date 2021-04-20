@@ -19,5 +19,5 @@
       "connection": "AzureStorageQueuesConnectionString"
     }
   ],
-  "disabled": false
+  "disabled": true
 }
