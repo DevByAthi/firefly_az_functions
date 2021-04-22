@@ -1,11 +1,23 @@
 import geojson
 
 
-def meets_device_format(d, is_sensor=True):
-    expected_device_type = 'sensor' if is_sensor else 'actuator'
-    return isinstance(d, geojson.Feature) \
-           and 'device_type' in d['properties'] \
-           and d['properties']['device_type'] == expected_device_type
+def is_device_sensor(payload: geojson.Feature) -> bool:
+    """
+    Assumes that payload is a geojson.Feature
+    :param payload:
+    :return:
+    """
+    if 'device_type' not in payload['properties']:
+        return False
+    if payload['properties']['device_type'] == 'sensor':
+        return True
+    elif payload['properties']['device_type'] == 'actuator':
+        return False
+    raise KeyError("Device type must either be a 'sensor' or an 'actuator'!")
+
+
+def meets_device_format(d):
+    return isinstance(d, geojson.Feature) and 'device_type' in d['properties']
 
 
 def get_always_fire(payload: dict) -> bool:
