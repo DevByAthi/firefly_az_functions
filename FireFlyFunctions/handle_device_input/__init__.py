@@ -9,7 +9,7 @@ import azure.functions as func
 from ..shared_code.shared_utils import meets_device_format, is_device_sensor
 
 
-def main(events: List[func.EventHubEvent], msg: func.Out[func.Document]):
+def main(events: List[func.EventHubEvent], actmsg: func.Out[func.Document], sensmsg: func.Out[func.Document]):
     for event in events:
         decoded_message = event.get_body().decode('utf-8')
 
@@ -30,13 +30,17 @@ def main(events: List[func.EventHubEvent], msg: func.Out[func.Document]):
         logging.info("TEST 3: Meets defined GeoJSON format")
 
         try:
-            device_type = is_device_sensor(decoded_dict)
+            is_sensor = is_device_sensor(decoded_dict)
         except KeyError:
+            logging.info("INVALID DEVICE TYPE!")
             continue
         logging.info("TEST 4: Is a valid device reading")
 
         logging.info('Python EventHub trigger processed an event: %s', decoded_message)
 
         # TODO: Send data to correct database depending on device type
-        msg.set(func.Document.from_dict(decoded_dict))
+        if is_sensor:
+            sensmsg.set(func.Document.from_dict(decoded_dict))
+        else:
+            actmsg.set(func.Document.from_dict(decoded_dict))
         logging.info("TEST 5: Successfully sent")

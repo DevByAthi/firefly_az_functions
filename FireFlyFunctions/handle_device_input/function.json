@@ -14,8 +14,18 @@
     {
       "type": "cosmosDB",
       "direction": "out",
-      "name": "msg",
+      "name": "actmsg",
       "databaseName": "actuators",
+      "collectionName": "data",
+      "partitionKey" : "/test",
+      "createIfNotExists": "true",
+      "connectionStringSetting": "AzureCosmosDBConnectionString"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "out",
+      "name": "sensmsg",
+      "databaseName": "sensors",
       "collectionName": "data",
       "partitionKey" : "/test",
       "createIfNotExists": "true",
