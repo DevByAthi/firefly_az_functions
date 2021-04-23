@@ -6,10 +6,20 @@
       "name": "documents",
       "direction": "in",
       "leaseCollectionName": "leases",
-      "connectionStringSetting": "",
-      "databaseName": "",
-      "collectionName": "",
+      "connectionStringSetting": "AzureCosmosDBConnectionString",
+      "databaseName": "actuators",
+      "collectionName": "data",
       "createLeaseCollectionIfNotExists": true
+    },
+    {
+      "type": "eventHub",
+      "name": "hub",
+      "direction": "out",
+      "eventHubName": "iotmurali",
+      "connection": "AzureEventHubConnectionString",
+      "cardinality": "many",
+      "consumerGroup": "$Default",
+      "dataType": "binary"
     }
   ]
 }
