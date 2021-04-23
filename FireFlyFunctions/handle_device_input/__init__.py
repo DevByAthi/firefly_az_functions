@@ -16,31 +16,31 @@ def main(events: List[func.EventHubEvent], actmsg: func.Out[func.Document], sens
         # dictionary obtained from message
         decoded_dict = None
 
-        logging.info("TEST 1")
+        # logging.info("TEST 1")
 
         try:
             decoded_dict = geojson.loads(decoded_message)
         except json.decoder.JSONDecodeError:
             continue
-        logging.info("TEST 2: Successfully converted to dict without error")
+        # logging.info("TEST 2: Successfully converted to dict without error")
 
         # Ensure that GeoJSON format is met, with requirement that event be from an "actuator", i.e. drone
         if decoded_dict is None or not meets_device_format(decoded_dict):
             continue
-        logging.info("TEST 3: Meets defined GeoJSON format")
+        # logging.info("TEST 3: Meets defined GeoJSON format")
 
         try:
             is_sensor = is_device_sensor(decoded_dict)
         except KeyError:
-            logging.info("INVALID DEVICE TYPE!")
+            # logging.info("INVALID DEVICE TYPE!")
             continue
-        logging.info("TEST 4: Is a valid device reading")
+        # logging.info("TEST 4: Is a valid device reading")
 
-        logging.info('Python EventHub trigger processed an event: %s', decoded_message)
+        # logging.info('Python EventHub trigger processed an event: %s', decoded_message)
 
         # TODO: Send data to correct database depending on device type
         if is_sensor:
             sensmsg.set(func.Document.from_dict(decoded_dict))
         else:
             actmsg.set(func.Document.from_dict(decoded_dict))
-        logging.info("TEST 5: Successfully sent")
+        # logging.info("TEST 5: Successfully sent")
