@@ -3,7 +3,12 @@ import os
 from datetime import datetime, timedelta
 
 import azure.functions as func
+import geojson
 from azure.cosmos import CosmosClient
+
+import numpy as np
+
+from ..shared_code.shared_utils import dict_to_str
 
 CLIENT = CosmosClient.from_connection_string(os.environ['AzureCosmosDBConnectionString'])
 database_name = 'sensors'
@@ -28,8 +33,17 @@ def main(mytimer: func.TimerRequest):
     query_results = list(CONTAINER.query_items(query=query_str, parameters=[{"name": "@time", "value": converted_time}],
                                                enable_cross_partition_query=True))
     print("LENGTH: {}".format(len(query_results)))
+
+    coordinates = dict()
     for doc in query_results:
-        print("{}: {}".format(doc['id'], doc['geometry']['coordinates']))
+        point_list = doc['geometry']['coordinates']
+        point_str = "{},{}".format(point_list[0], point_list[1])
+        print("{}: {}".format(doc['id'], point_list))
+        point = geojson.Point((point_list[0], point_list[1]))
+        coordinates[point_str] = point
+
+    print(coordinates)
+
     # TODO: Apply Welzl's Algo to parsed coordinates
 
     # TODO: Obtain coordinates and radius of minimum enclosing circle
