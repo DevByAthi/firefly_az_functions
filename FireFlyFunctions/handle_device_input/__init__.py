@@ -38,7 +38,7 @@ def main(events: List[func.EventHubEvent], actmsg: func.Out[func.Document], sens
 
         # logging.info('Python EventHub trigger processed an event: %s', decoded_message)
 
-        # TODO: Send data to correct database depending on device type
+        # Send data to correct database depending on device type
         if is_sensor:
             sensmsg.set(func.Document.from_dict(decoded_dict))
         else:
