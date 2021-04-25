@@ -7,10 +7,10 @@ from azure.cosmos import CosmosClient
 CLIENT = CosmosClient.from_connection_string(os.environ['AzureCosmosDBConnectionString'])
 
 
-def main(documents: func.DocumentList) -> str:
+def main(documents: func.DocumentList):
     if documents:
         logging.info('Document id: %s', documents[0]['id'])
         logging.info("Documents List length: {}".format(len(documents)))
-        if 'geometry' not in documents[0]:
-            return "FAILED TO RETRIEVE CORRECT DOCUMENT"
-        return str(documents[0]['geometry']).replace("'", '"')
+        for i in range(len(documents)):
+            doc = documents[i]
+            print("Document #{}: {}".format(i, doc['id']))

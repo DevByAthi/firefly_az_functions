@@ -8,18 +8,9 @@
       "leaseCollectionName": "leases",
       "connectionStringSetting": "AzureCosmosDBConnectionString",
       "databaseName": "actuators",
+      "createIfNotExists": "true",
       "collectionName": "data",
-      "createLeaseCollectionIfNotExists": true
-    },
-    {
-      "type": "eventHub",
-      "name": "hub",
-      "direction": "out",
-      "eventHubName": "iotmurali",
-      "connection": "AzureEventHubConnectionString",
-      "cardinality": "many",
-      "consumerGroup": "$Default",
-      "dataType": "binary"
+      "CreateLeaseCollectionIfNotExists": true
     }
   ]
 }
