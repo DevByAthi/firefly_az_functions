@@ -53,6 +53,11 @@ def main(mytimer: func.TimerRequest):
     LOGGER.log(LEVEL, coordinates)
 
     # TODO: Apply Welzl's Algo to parsed coordinates
+    coord_list = list(coordinates)
+    max_iterations = len(coord_list) * 10
+    nsphere: NSphere = welzl(points=coord_list, maxiterations=max_iterations)
+
+    LOGGER.log(LEVEL, "Center: {}, Radius: {}".format(nsphere.center, nsphere.sqradius))
 
     # TODO: Obtain coordinates and radius of minimum enclosing circle
 
