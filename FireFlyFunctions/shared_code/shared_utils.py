@@ -1,6 +1,12 @@
 import geojson
 
 
+
+
+def dict_to_str(d: dict) -> str:
+    return str(d).replace("'", '"')
+
+
 def is_device_sensor(payload: geojson.Feature) -> bool:
     """
     Assumes that payload is a geojson.Feature
