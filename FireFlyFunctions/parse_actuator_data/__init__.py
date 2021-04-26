@@ -25,6 +25,7 @@ import geojson
 from azure.cosmos import CosmosClient
 
 import numpy as np
+from azure.iot.device import IoTHubDeviceClient
 
 from ..shared_code.shared_utils import dict_to_str
 from ..shared_code.welzl import welzl, NSphere
@@ -42,11 +43,14 @@ LEVEL = 25
 
 # TODO: Wrap in a try-except block in a function to avoid spaghetti coding
 #  and handle potential connection errors
-CLIENT = CosmosClient.from_connection_string(os.environ['AzureCosmosDBConnectionString'])
+CLIENT = CosmosClient.from_connection_string(os.getenv('AzureCosmosDBConnectionString'))
 database_name = 'sensors'
 DATABASE = CLIENT.get_database_client(database_name)
 container_name = 'data'
 CONTAINER = DATABASE.get_container_client(container_name)
+
+# TODO: Test that direct method calls work without connection error!
+IOT_HUB_CLIENT = IoTHubDeviceClient.create_from_connection_string(os.getenv('AzureCosmosDBConnectionString'))
 
 LOGGER = logging.getLogger('log')
 
