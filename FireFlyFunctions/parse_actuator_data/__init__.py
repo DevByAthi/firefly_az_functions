@@ -41,22 +41,42 @@ ITERATION_FACTOR = 10
 # Custom log level used for debug purposes
 LEVEL = 25
 
-# TODO: Wrap in a try-except block in a function to avoid spaghetti coding
-#  and handle potential connection errors
-CLIENT = CosmosClient.from_connection_string(os.getenv('AzureCosmosDBConnectionString'))
-database_name = 'sensors'
-DATABASE = CLIENT.get_database_client(database_name)
-container_name = 'data'
-CONTAINER = DATABASE.get_container_client(container_name)
+CLIENT = None
+DATABASE = None
+CONTAINER = None
 
 # TODO: Test that direct method calls work without connection error!
-IOT_HUB_CLIENT = IoTHubDeviceClient.create_from_connection_string(os.getenv('AzureCosmosDBConnectionString'))
+# IOT_REGISTRY_MANAGER = None
+IOT_REGISTRY_MANAGER = IoTHubRegistryManager("HostName=iotmurali.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=8pb/ntX+rPMwZs6bgDf8u1XI7aFncHfcX56/ZUsDEbk=")
+DEVICE_ID = "MyPythonDevice"
+METHOD_NAME = "DetermineFlightPath"
 
 LOGGER = logging.getLogger('log')
 
 
+def init_connections():
+    # TODO: Wrap in a try-except block in a function to avoid spaghetti coding
+    #  and handle potential connection errors
+    global CLIENT
+    global DATABASE
+    global CONTAINER
+
+    global IOT_REGISTRY_MANAGER
+
+    CLIENT = CosmosClient.from_connection_string(os.getenv('AzureCosmosDBConnectionString'))
+    database_name = 'sensors'
+    DATABASE = CLIENT.get_database_client(database_name)
+    container_name = 'data'
+    CONTAINER = DATABASE.get_container_client(container_name)
+
+
+
 def main(mytimer: func.TimerRequest):
     LOGGER.setLevel(LEVEL)
+    timestamps = dict()
+    if not (CONTAINER and DATABASE and CLIENT):
+        init_connections()
+
 
     # Get current time for timestamp-based query filter
     current_time = datetime.now()
