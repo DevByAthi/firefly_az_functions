@@ -26,6 +26,9 @@ from azure.cosmos import CosmosClient
 
 import numpy as np
 from azure.iot.device import IoTHubDeviceClient
+from azure.iot.hub import IoTHubRegistryManager
+from azure.iot.hub.models import CloudToDeviceMethod
+from msrest.exceptions import HttpOperationError
 
 from ..shared_code.shared_utils import dict_to_str
 from ..shared_code.welzl import welzl, NSphere
@@ -84,6 +87,8 @@ def main(mytimer: func.TimerRequest):
     converted_time = datetime.timestamp(prev_time)
     LOGGER.log(LEVEL, "Time: {}".format(converted_time))
 
+    timestamps["Initialization"] = current_time
+
     # Query Cosmos DB with timestamp clause
     # NOTE: This may later be done via a stored proc on the Cosmos DB emulator
     # TODO: Consider sensor readings as criteria for query, need significant readings
@@ -92,6 +97,8 @@ def main(mytimer: func.TimerRequest):
     query_results = list(CONTAINER.query_items(query=query_str, parameters=[{"name": "@time", "value": converted_time}],
                                                enable_cross_partition_query=True))
     LOGGER.log(LEVEL, "LENGTH: {}".format(len(query_results)))
+
+    timestamps["Finished Query"] = datetime.now()
 
     # Create aggregation set for coordinates retrieved from query
     # A set prevents duplicate coordinates from being stored, which would impede
@@ -102,6 +109,7 @@ def main(mytimer: func.TimerRequest):
         point_list = doc['geometry']['coordinates']
         point = (point_list[0], point_list[1])
         coordinates.add(point)
+    timestamps["Finished Query"] = datetime.now()
 
     # Check if there are any coordinates from recent sensor readings of significance
     if len(coordinates) == 0:
@@ -113,14 +121,29 @@ def main(mytimer: func.TimerRequest):
     coord_list = list(coordinates)
     max_iterations = len(coord_list) * ITERATION_FACTOR
     nsphere: NSphere = welzl(points=coord_list, maxiterations=max_iterations)
+    timestamps["Finished Welzl's Algorithm"] = datetime.now()
 
     # Log coordinates and radius of minimum enclosing circle
     LOGGER.log(LEVEL, "Center: {}, Radius: {}".format(nsphere.center, nsphere.sqradius))
 
     # Send out points along circumference of minimum enclosing circle
+    mission_coords = []
     for bearing in range(0, 360, 360 // NUM_POINTS):
         lat, lon, _ = vincentyDirect_kennedy(nsphere.center[0], nsphere.center[1], 1000 * (nsphere.sqradius ** 0.5),
                                              bearing)
+        mission_coords.append((lat, lon))
         LOGGER.log(LEVEL, "Coordinates on Circumference: ({}, {})".format(lat, lon))
+    timestamps["Finished Vincenty's Direct Method"] = datetime.now()
 
-    # TODO: Send out coordinates on circumference to IoT Hub drones via direct method, will need IotHubRegistry
+    try:
+        mission_geojson = geojson.MultiPoint(mission_coords)
+        if mission_geojson.is_valid:
+            # TODO: Send out coordinates on circumference to IoT Hub drones via direct method, will need IotHubRegistry
+            device_method = CloudToDeviceMethod(method_name=METHOD_NAME, payload=mission_geojson)
+            response = IOT_REGISTRY_MANAGER.invoke_device_method(DEVICE_ID, device_method)
+            print("Response Payload: {}".format(response.payload))
+    except ValueError:
+        return
+    except HttpOperationError as e:
+        print("No available idle drones for mission!")
+        return
