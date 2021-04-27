@@ -38,7 +38,6 @@ from ..shared_code.vincenty import vincentyDirect_kennedy
 NUM_POINTS = 10
 
 # Number of iterations needed for Welzl's Algorithm, multiplied by the number of points
-# TODO: Find optimal iteration factor / formula w.r.t. number of input points
 ITERATION_FACTOR = 10
 
 # Custom log level used for debug purposes
@@ -48,8 +47,6 @@ CLIENT = None
 DATABASE = None
 CONTAINER = None
 
-# TODO: Test that direct method calls work without connection error!
-# IOT_REGISTRY_MANAGER = None
 IOT_REGISTRY_MANAGER = IoTHubRegistryManager("HostName=iotmurali.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=8pb/ntX+rPMwZs6bgDf8u1XI7aFncHfcX56/ZUsDEbk=")
 DEVICE_ID = "MyPythonDevice"
 METHOD_NAME = "DetermineFlightPath"
@@ -58,8 +55,6 @@ LOGGER = logging.getLogger('log')
 
 
 def init_connections():
-    # TODO: Wrap in a try-except block in a function to avoid spaghetti coding
-    #  and handle potential connection errors
     global CLIENT
     global DATABASE
     global CONTAINER
@@ -73,13 +68,11 @@ def init_connections():
     CONTAINER = DATABASE.get_container_client(container_name)
 
 
-
 def main(mytimer: func.TimerRequest):
     LOGGER.setLevel(LEVEL)
-    timestamps = dict()
+    timestamps = []
     if not (CONTAINER and DATABASE and CLIENT):
         init_connections()
-
 
     # Get current time for timestamp-based query filter
     current_time = datetime.now()
@@ -87,18 +80,18 @@ def main(mytimer: func.TimerRequest):
     converted_time = datetime.timestamp(prev_time)
     LOGGER.log(LEVEL, "Time: {}".format(converted_time))
 
-    timestamps["Initialization"] = current_time
+    timestamps.append(("Initialization", current_time))
 
     # Query Cosmos DB with timestamp clause
     # NOTE: This may later be done via a stored proc on the Cosmos DB emulator
     # TODO: Consider sensor readings as criteria for query, need significant readings
-    query_str = "SELECT * FROM data r WHERE r._ts >= @time"
+    query_str = "SELECT * FROM data r WHERE r._ts >= @time AND r.properties.carbon_monoxide.val > 12 AND r.properties.pm2_5.val > 5"
 
     query_results = list(CONTAINER.query_items(query=query_str, parameters=[{"name": "@time", "value": converted_time}],
                                                enable_cross_partition_query=True))
     LOGGER.log(LEVEL, "LENGTH: {}".format(len(query_results)))
 
-    timestamps["Finished Query"] = datetime.now()
+    timestamps.append(("Finished Query", datetime.now()))
 
     # Create aggregation set for coordinates retrieved from query
     # A set prevents duplicate coordinates from being stored, which would impede
@@ -109,11 +102,11 @@ def main(mytimer: func.TimerRequest):
         point_list = doc['geometry']['coordinates']
         point = (point_list[0], point_list[1])
         coordinates.add(point)
-    timestamps["Finished Query"] = datetime.now()
+    timestamps.append(("Finished Query", datetime.now()))
 
     # Check if there are any coordinates from recent sensor readings of significance
-    if len(coordinates) == 0:
-        LOGGER.log(LEVEL, "No coordinates retrieved")
+    if len(coordinates) < 3:
+        LOGGER.log(LEVEL, "Not enough coordinates retrieved to apply Welzl's Algorithm")
         return
     LOGGER.log(LEVEL, "Sensor coordinates retrieved: {}".format(coordinates))
 
@@ -121,7 +114,7 @@ def main(mytimer: func.TimerRequest):
     coord_list = list(coordinates)
     max_iterations = len(coord_list) * ITERATION_FACTOR
     nsphere: NSphere = welzl(points=coord_list, maxiterations=max_iterations)
-    timestamps["Finished Welzl's Algorithm"] = datetime.now()
+    timestamps.append(("Finished Welzl's Algorithm", datetime.now()))
 
     # Log coordinates and radius of minimum enclosing circle
     LOGGER.log(LEVEL, "Center: {}, Radius: {}".format(nsphere.center, nsphere.sqradius))
@@ -133,12 +126,12 @@ def main(mytimer: func.TimerRequest):
                                              bearing)
         mission_coords.append((lat, lon))
         LOGGER.log(LEVEL, "Coordinates on Circumference: ({}, {})".format(lat, lon))
-    timestamps["Finished Vincenty's Direct Method"] = datetime.now()
+    timestamps.append(("Finished Vincenty's Direct Method", datetime.now()))
 
     try:
         mission_geojson = geojson.MultiPoint(mission_coords)
         if mission_geojson.is_valid:
-            # TODO: Send out coordinates on circumference to IoT Hub drones via direct method, will need IotHubRegistry
+            # Send out coordinates on circumference to IoT Hub drones via direct method via IoTHubRegistryManager
             device_method = CloudToDeviceMethod(method_name=METHOD_NAME, payload=mission_geojson)
             response = IOT_REGISTRY_MANAGER.invoke_device_method(DEVICE_ID, device_method)
             print("Response Payload: {}".format(response.payload))
@@ -146,4 +139,8 @@ def main(mytimer: func.TimerRequest):
         return
     except HttpOperationError as e:
         print("No available idle drones for mission!")
-        return
+        timestamps.append(("Finished Sending Payload to Drone", datetime.now()))
+
+    for i in range(1, len(timestamps)):
+        curr, prev = timestamps[i], timestamps[i-1]
+        print("\033[92m {}: difference is {} from previous stage {} \033[00m".format(curr[0], curr[1] - prev[1], prev[0]))
