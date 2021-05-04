@@ -1,3 +1,22 @@
+"""
+handle_device_input
+a.k.a. Azure Function 2
+
+===================
+
+This function triggers when the associated IoT Hub receives new device data. When triggered, the function will obtain the data record and do the following:
+1. Parse it into a GeoJSON-formatted object
+2. Check that GeoJSON record has a 'device_type' property
+3. If parsed record is invalid and does not meet necessary criteria, SKIP and wait for next record
+4. If 'device_type' is a sensor, then insert record into the 'sensors' table in the associated Cosmos DB database
+5. Otherwise, 'device_type' must be actuator, so insert record into the 'actuators' table in the associated Cosmos DB database
+
+Azure Function made by Athreya Murali
+
+Last Modified: 3 May 2021, 8:46 PM EDT
+"""
+
+
 import json.decoder
 import os
 from typing import List

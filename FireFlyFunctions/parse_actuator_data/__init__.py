@@ -1,5 +1,8 @@
 """
-parse_actuator_data.py
+parse_actuator_data
+a.k.a. Azure Function 1
+
+===================
 
 Query for sensor readings at a regular interval (may change trigger). Use sensor readings that detect a wildfire to
 estimate where the fire is After parsing sensor data to obtain coordinates of triggered sensors, apply Welzl's
@@ -13,7 +16,7 @@ Azure Function made by Athreya Murali
 Welzl's Algorithm implementation made by Karmela Flynn
 Vincenty Direct Method implementation made by Paul Kennedy and Jim Leven
 
-Last Modified: 25 April 2021, 4:09 AM EDT
+Last Modified: 3 May 2021, 8:46 PM EDT
 """
 
 import logging
