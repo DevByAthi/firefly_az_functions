@@ -47,7 +47,7 @@ CLIENT = None
 DATABASE = None
 CONTAINER = None
 
-IOT_REGISTRY_MANAGER = IoTHubRegistryManager("HostName=iotmurali.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=8pb/ntX+rPMwZs6bgDf8u1XI7aFncHfcX56/ZUsDEbk=")
+IOT_REGISTRY_MANAGER = IoTHubRegistryManager(os.getenv('ServiceConnectionString'))
 DEVICE_ID = "MyPythonDevice"
 METHOD_NAME = "DetermineFlightPath"
 
@@ -105,7 +105,7 @@ def main(mytimer: func.TimerRequest):
     timestamps.append(("Finished Query", datetime.now()))
 
     # Check if there are any coordinates from recent sensor readings of significance
-    if len(coordinates) < 3:
+    if len(coordinates) < 2:
         LOGGER.log(LEVEL, "Not enough coordinates retrieved to apply Welzl's Algorithm")
         return
     LOGGER.log(LEVEL, "Sensor coordinates retrieved: {}".format(coordinates))
