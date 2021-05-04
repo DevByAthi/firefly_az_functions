@@ -2,7 +2,9 @@
 Taken from this GitHub Gist: https://github.com/pktrigg/pyall/blob/master/geodetic.py
 By Paul Kennedy and Jim Leven
 
-THIS IS NOT THE WORK OF ATHREYA MURALI OR ANY MEMBER OF TEAM FIREFLY
+THIS IS NOT THE ORIGINAL WORK OF ATHREYA MURALI OR ANY MEMBER OF TEAM FIREFLY.
+ONLY SLIGHT MODIFICATIONS HAVE BEEN MADE FROM THE ORIGINAL CODE.
+THIS IS PUBLICLY AVAILABLE CODE, ORIGINALLY WRITTEN BY THE U.S. GEOLOGICAL SURVEY IN THE EARLY 2000's
 '''
 
 
@@ -108,16 +110,6 @@ def vincentyDirect_kennedy(latitude1, longitude1, alpha1To2, s):
     return latitude2, longitude2, alpha21
 
     # END of Vincenty's Direct formulae
-
-
-def vincentyDirect(latitude1: float, longitude1: float, bearing1to2: float, distance: float):
-    u1 = math.atan((1-FLATTENING) * math.tan(latitude1))
-    sigma1 = math.atan2(math.tan(u1), math.cos(bearing1to2))
-    sin_a = math.cos(u1) * math.sin(bearing1to2)
-
-
-
-    pass
 
 
 if __name__ == '__main__':
